@@ -325,7 +325,7 @@ class TestExperimentServer(object):
         assert 'IOError writing to experiment log' in data['message']
 
 
-@pytest.mark.xfail(reason="TestExperiment class mysteriously None when called via super()")
+# @pytest.mark.xfail(reason="TestExperiment class mysteriously None when called via super()")
 @pytest.mark.usefixtures('experiment_dir')
 class TestWorkerFunctionIntegration(object):
 
@@ -377,6 +377,26 @@ class TestWorkerFunctionIntegration(object):
             )
             mock_baseclass.for_name.assert_called_once_with('MockEvent')
             runner.call_args[0][0] is participant
+
+    def test_tracking_event(self, worker_func, db_session):
+        from dallinger.models import Participant
+        from dallinger.models import Notification
+        participant = Participant(
+            worker_id='1', hit_id='1', assignment_id='1', mode="test")
+        db_session.add(participant)
+        db_session.commit()
+        worker_func(
+            event_type='TrackingEvent',
+            assignment_id=None,
+            participant_id=participant.id,
+            details={'test': True}
+        )
+        events = db_session.query(Notification).filter(
+            Notification.event_type == 'TrackingEvent').all()
+        assert len(events) == 1
+        event = events[0]
+        assert event.assignment_id == '1'
+        assert event.details['test'] is True
 
 
 class TestWorkerEvents(object):

@@ -335,7 +335,7 @@ class MTurkLargeRecruiter(MTurkRecruiter):
 class BotRecruiter(Recruiter):
     """Recruit bot participants using a queue"""
 
-    def __init__(self, config):
+    def __init__(self):
         super(BotRecruiter, self).__init__()
         self.config = get_config()
         logger.info("Initialized BotRecruiter.")

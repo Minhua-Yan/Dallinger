@@ -40,7 +40,15 @@ class Recruiter(object):
         pass
 
     def open_recruitment(self):
-        """Return a list of one or more initial recruitment URLs.
+        """Return a list of one or more initial recruitment URLs and an initial
+        recruitment message:
+        {
+            items: [
+                'https://experiment-url-1',
+                'https://experiemnt-url-2'
+            ],
+            message: 'More info about this particular recruiter's process'
+        }
         """
         raise NotImplementedError
 
@@ -72,9 +80,21 @@ class CLIRecruiter(Recruiter):
         self.config = get_config()
 
     def open_recruitment(self, n=1):
-        """Talk about opening recruitment."""
+        """Return initial experiment URL list, plus instructions
+        for finding subsequent recruitment events in experiemnt logs.
+        """
         logger.info("Opening recruitment.")
-        return self.recruit(n)
+        recruitments = self.recruit(n)
+        message = ''.join((
+            'Search for "{}" '.format(NEW_RECRUIT_LOG_PREFIX),
+            'in the logs for subsequent recruitment URLs.\n',
+            'Open the logs for this experiment with ',
+            '"dallinger logs --app {}"'.format(self.config.get('id')),
+        ))
+        return {
+            'items': recruitments,
+            'message': message
+        }
 
     def recruit(self, n=1):
         """Generate experiemnt URLs and print them to the console."""
@@ -121,6 +141,18 @@ class HotAirRecruiter(CLIRecruiter):
     - Always invokes templates in debug mode
     - Prints experiment /ad URLs to the console
     """
+    def open_recruitment(self, n=1):
+        """Return initial experiment URL list, plus instructions
+        for finding subsequent recruitment events in experiemnt logs.
+        """
+        logger.info("Opening recruitment.")
+        recruitments = self.recruit(n)
+        message = "Recruitment requests will open browser windows automatically."
+
+        return {
+            'items': recruitments,
+            'message': message
+        }
 
     def reward_bonus(self, assignment_id, amount, reason):
         """Logging-only, Hot Air implementation"""
@@ -139,7 +171,10 @@ class SimulatedRecruiter(Recruiter):
 
     def open_recruitment(self, n=1):
         """Open recruitment."""
-        return self.recruit(n)
+        return {
+            'items': self.recruit(n),
+            'message': 'Simulated recruitment only'
+        }
 
     def recruit(self, n=1):
         """Recruit n participants."""
@@ -225,7 +260,10 @@ class MTurkRecruiter(Recruiter):
         else:
             lookup_url = "https://worker.mturk.com/mturk/preview?groupId={type_id}"
 
-        return [lookup_url.format(**hit_info), ]
+        return {
+            'items': [lookup_url.format(**hit_info), ],
+            'message': 'HIT now published to Amazon Mechanical Turk'
+        }
 
     def recruit(self, n=1):
         """Recruit n new participants to an existing HIT"""
@@ -353,7 +391,10 @@ class BotRecruiter(Recruiter):
     def open_recruitment(self, n=1):
         """Start recruiting right away."""
         logger.info("Open recruitment.")
-        return self.recruit(n)
+        return {
+            'items': self.recruit(n),
+            'message': 'Bot recruitment started using {}'.format(self._get_bot_class())
+        }
 
     def recruit(self, n=1):
         """Recruit n new participant bots to the queue"""

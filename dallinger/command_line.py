@@ -524,7 +524,7 @@ def deploy_sandbox_shared_setup(verbose=True, app=None, exp_config=None):
     }
     log("URLs:")
     log("App home: {}".format(result['app_home']), chevrons=False)
-    log("Initial recruitment:\n{}".format(result['recruitment_msg']), chevrons=False)
+    log("Recruiter info:\n{}".format(result['recruitment_msg']), chevrons=False)
 
     # Return to the branch whence we came.
     os.chdir(cwd)
@@ -769,7 +769,7 @@ class LocalSessionRunner(object):
 class DebugSessionRunner(LocalSessionRunner):
 
     dispatch = {
-        '{} (.*)$'.format(recruiters.NEW_RECRUIT_LOG_PREFIX): 'new_recruit',
+        '[^\"]{} (.*)$'.format(recruiters.NEW_RECRUIT_LOG_PREFIX): 'new_recruit',
         '{}$'.format(recruiters.CLOSE_RECRUITMENT_LOG_PREFIX): 'recruitment_closed',
     }
 
@@ -791,8 +791,10 @@ class DebugSessionRunner(LocalSessionRunner):
         self.out.log("Server is running on {}. Press Ctrl+C to exit.".format(base_url))
         self.out.log("Launching the experiment...")
         time.sleep(4)
-        _handle_launch_data('{}/launch'.format(base_url), error=self.out.error)
-        heroku.monitor(listener=self.notify)
+        result = _handle_launch_data('{}/launch'.format(base_url), error=self.out.error)
+        if result['status'] == 'success':
+            self.out.log(result['recruitment_msg'])
+            heroku.monitor(listener=self.notify)
 
     def cleanup(self):
         log("Completed debugging of experiment with id " + self.exp_id)

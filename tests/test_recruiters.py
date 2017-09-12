@@ -100,14 +100,19 @@ class TestCLIRecruiter(object):
 
     def test_open_recruitment_recruits_one_by_default(self, recruiter):
         result = recruiter.open_recruitment()
-        assert len(result) == 1
+        assert len(result['items']) == 1
+
+    def test_open_recruitment_describes_how_it_works(self, recruiter):
+        result = recruiter.open_recruitment()
+        assert 'Search for "New participant requested:"' in result['message']
 
     def test_open_recruitment_multiple(self, recruiter):
         result = recruiter.open_recruitment(n=3)
-        assert len(result) == 3
+        assert len(result['items']) == 3
 
     def test_open_recruitment_results_are_urls(self, recruiter):
-        assert '/ad?assignmentId=' in recruiter.open_recruitment()[0]
+        result = recruiter.open_recruitment()
+        assert '/ad?assignmentId=' in result['items'][0]
 
     def test_close_recruitment(self, recruiter):
         recruiter.close_recruitment()
@@ -120,7 +125,8 @@ class TestCLIRecruiter(object):
 
     def test_open_recruitment_uses_configured_mode(self, recruiter, active_config):
         active_config.extend({'mode': u'new_mode'})
-        assert 'mode=new_mode' in recruiter.open_recruitment()[0]
+        result = recruiter.open_recruitment()
+        assert 'mode=new_mode' in result['items'][0]
 
 
 @pytest.mark.usefixtures('active_config')
@@ -143,14 +149,19 @@ class TestHotAirRecruiter(object):
 
     def test_open_recruitment_recruits_one_by_default(self, recruiter):
         result = recruiter.open_recruitment()
-        assert len(result) == 1
+        assert len(result['items']) == 1
+
+    def test_open_recruitment_describes_how_it_works(self, recruiter):
+        result = recruiter.open_recruitment()
+        assert 'requests will open browser windows' in result['message']
 
     def test_open_recruitment_multiple(self, recruiter):
         result = recruiter.open_recruitment(n=3)
-        assert len(result) == 3
+        assert len(result['items']) == 3
 
     def test_open_recruitment_results_are_urls(self, recruiter):
-        assert '/ad?assignmentId=' in recruiter.open_recruitment()[0]
+        result = recruiter.open_recruitment()
+        assert '/ad?assignmentId=' in result['items'][0]
 
     def test_close_recruitment(self, recruiter):
         recruiter.close_recruitment()
@@ -163,7 +174,8 @@ class TestHotAirRecruiter(object):
 
     def test_open_recruitment_ignores_configured_mode(self, recruiter, active_config):
         active_config.extend({'mode': u'new_mode'})
-        assert 'mode=debug' in recruiter.open_recruitment()[0]
+        result = recruiter.open_recruitment()
+        assert 'mode=debug' in result['items'][0]
 
 
 class TestSimulatedRecruiter(object):
@@ -180,10 +192,10 @@ class TestSimulatedRecruiter(object):
         assert recruiter.recruit(n=3) == []
 
     def test_open_recruitment_returns_empty_result(self, recruiter):
-        assert recruiter.open_recruitment() == []
+        assert recruiter.open_recruitment()['items'] == []
 
     def test_open_recruitment_multiple_returns_empty_result(self, recruiter):
-        assert recruiter.open_recruitment(n=3) == []
+        assert recruiter.open_recruitment(n=3)['items'] == []
 
 
 class TestBotRecruiter(object):
@@ -196,7 +208,7 @@ class TestBotRecruiter(object):
                                  get_base_url=mock.DEFAULT) as mocks:
             mocks['get_base_url'].return_value = 'fake_base_url'
             r = BotRecruiter()
-            r._get_bot_class = mock.Mock()
+            r._get_bot_class = mock.Mock(name="FakeBot")
             yield r
 
     def test_recruit_returns_list(self, recruiter):
@@ -209,11 +221,15 @@ class TestBotRecruiter(object):
 
     def test_open_recruitment_returns_list(self, recruiter):
         result = recruiter.open_recruitment(n=2)
-        assert len(result) == 2
+        assert len(result['items']) == 2
 
     def test_open_recruitment_returns_urls(self, recruiter):
         result = recruiter.open_recruitment()
-        assert result[0].startswith('fake_base_url')
+        assert result['items'][0].startswith('fake_base_url')
+
+    def test_open_recruitment_describes_how_it_works(self, recruiter):
+        result = recruiter.open_recruitment()
+        assert "recruitment started using <Mock name='FakeBot()'" in result['message']
 
     def test_close_recruitment(self, recruiter):
         recruiter.close_recruitment()
@@ -254,13 +270,17 @@ class TestMTurkRecruiter(object):
         recruiter.config.set('mode', u'live')
         assert 'www.mturk.com' in recruiter.external_submission_url
 
-    def test_open_recruitment_returns_one_item_list(self, recruiter):
+    def test_open_recruitment_returns_one_item_recruitments_list(self, recruiter):
         result = recruiter.open_recruitment(n=2)
-        assert len(result) == 1
+        assert len(result['items']) == 1
+
+    def test_open_recruitment_describes_how_it_works(self, recruiter):
+        result = recruiter.open_recruitment()
+        assert 'HIT now published to Amazon Mechanical Turk' in result['message']
 
     def test_open_recruitment_returns_urls(self, recruiter):
-        result = recruiter.open_recruitment(n=1)
-        assert result[0] == 'https://workersandbox.mturk.com/mturk/preview?groupId=fake type id'
+        url = recruiter.open_recruitment(n=1)['items'][0]
+        assert url == 'https://workersandbox.mturk.com/mturk/preview?groupId=fake type id'
 
     def test_open_recruitment_raises_if_no_external_hit_domain_configured(self, recruiter):
         from dallinger.recruiters import MTurkRecruiterException

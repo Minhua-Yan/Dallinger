@@ -245,7 +245,7 @@ def launch():
         )
 
     try:
-        recruitment_urls = exp.recruiter.open_recruitment(n=exp.initial_recruitment_size)
+        recruitment_details = exp.recruiter.open_recruitment(n=exp.initial_recruitment_size)
         session.commit()
     except Exception:
         return error_response(
@@ -278,7 +278,12 @@ def launch():
                 status=500, simple=True
             )
 
-    return success_response(recruitment_msg=u'\n'.join(recruitment_urls))
+    message = "\n".join((
+        "Initial recruitment list:\n{}".format("\n".join(recruitment_details['items'])),
+        "Additional details:\n{}".format(recruitment_details['message'])
+    ))
+
+    return success_response(recruitment_msg=message)
 
 
 @app.route('/ad', methods=['GET'])

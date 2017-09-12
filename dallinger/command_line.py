@@ -38,6 +38,7 @@ from dallinger.heroku.worker import conn
 from dallinger.heroku.tools import HerokuLocalWrapper
 from dallinger.heroku.tools import HerokuApp
 from dallinger.mturk import MTurkService
+from dallinger import recruiters
 from dallinger import registration
 from dallinger.utils import generate_random_id
 from dallinger.utils import get_base_url
@@ -768,8 +769,8 @@ class LocalSessionRunner(object):
 class DebugSessionRunner(LocalSessionRunner):
 
     dispatch = {
-        'New participant requested: (.*)$': 'new_recruit',
-        'Close recruitment.$': 'recruitment_closed',
+        '{} (.*)$'.format(recruiters.NEW_RECRUIT_LOG_PREFIX): 'new_recruit',
+        '{}$'.format(recruiters.CLOSE_RECRUITMENT_LOG_PREFIX): 'recruitment_closed',
     }
 
     def __init__(self, output, verbose, bot, proxy_port, exp_config):

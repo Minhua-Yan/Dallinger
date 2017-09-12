@@ -22,6 +22,12 @@ def _get_queue():
     return Queue('low', connection=conn)
 
 
+# These are constants because other components may listen for these
+# messages in logs:
+NEW_RECRUIT_LOG_PREFIX = 'New participant requested:'
+CLOSE_RECRUITMENT_LOG_PREFIX = 'Close recruitment.'
+
+
 class Recruiter(object):
     """The base recruiter."""
 
@@ -82,14 +88,14 @@ class CLIRecruiter(Recruiter):
                 generate_random_id(),
                 self._get_mode()
             )
-            logger.info('New participant requested: {}'.format(ad_url))
+            logger.info('{} {}'.format(NEW_RECRUIT_LOG_PREFIX, ad_url))
             urls.append(ad_url)
 
         return urls
 
     def close_recruitment(self):
         """Talk about closing recruitment."""
-        logger.info("Close recruitment.")
+        logger.info(CLOSE_RECRUITMENT_LOG_PREFIX)
 
     def approve_hit(self, assignment_id):
         """Approve the HIT."""
@@ -285,7 +291,7 @@ class MTurkRecruiter(Recruiter):
         This does nothing, because the fact that this is called means
         that all MTurk HITs that were created were already completed.
         """
-        logger.info("Close recruitment.")
+        logger.info(CLOSE_RECRUITMENT_LOG_PREFIX)
 
     def _config_to_list(self, key):
         # At some point we'll support lists, so all service code supports them,
@@ -377,7 +383,7 @@ class BotRecruiter(Recruiter):
 
         This does nothing at this time.
         """
-        logger.info("Close recruitment.")
+        logger.info(CLOSE_RECRUITMENT_LOG_PREFIX)
 
     def reward_bonus(self, assignment_id, amount, reason):
         """Logging only. These are bots."""

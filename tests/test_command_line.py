@@ -448,6 +448,7 @@ class TestDebugServer(object):
     def test_recruitment_closed(self, debugger_unpatched):
         from dallinger.heroku.tools import HerokuLocalWrapper
         from dallinger.config import get_config
+        from dallinger.recruiters import CLOSE_RECRUITMENT_LOG_PREFIX
         debugger = debugger_unpatched
         get_config().load()
         debugger.new_recruit = mock.Mock(return_value=None)
@@ -456,7 +457,7 @@ class TestDebugServer(object):
         )
         with mock.patch('dallinger.command_line.requests') as mock_requests:
             mock_requests.get.return_value = response
-            response = debugger.notify("Close recruitment.")
+            response = debugger.notify(CLOSE_RECRUITMENT_LOG_PREFIX)
 
         assert response == HerokuLocalWrapper.MONITOR_STOP
         debugger.out.log.assert_called_with('Experiment completed, all nodes filled.')

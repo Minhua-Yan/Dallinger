@@ -453,16 +453,28 @@ def from_config(config):
     """
     debug_mode = config.get('mode', None) == 'debug'
     name = config.get('recruiter', None)
+    klass = None
 
     if name is not None:
         klass = by_name(name)
-        if klass is not None:
-            return klass()
-        raise NotImplementedError
 
+    # Special case 1: may run BotRecruiter in debug mode
+    if klass is BotRecruiter:
+        return klass()
+
+    # Special case 2: if we're not using bots and we're in debug mode,
+    # ignore any configured recruiter
     if debug_mode:
         return HotAirRecruiter()
 
+    # Configured recruiter
+    if klass is not None:
+        return klass()
+
+    if name and klass is None:
+        raise NotImplementedError("No such recruiter {}".format(name))
+
+    # Default if we're not in debug mode:
     return MTurkRecruiter()
 
 

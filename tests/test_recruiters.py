@@ -29,14 +29,24 @@ class TestModuleFunctions(object):
     def test_by_name_with_invalid_name(self, mod):
         assert mod.by_name('blah') is None
 
-    def test_recruiter_for_debug_mode(self, mod, stub_config):
+    def test_for_debug_mode(self, mod, stub_config):
         r = mod.from_config(stub_config)
         assert isinstance(r, mod.HotAirRecruiter)
 
-    def test_recruiter_consults_recruiter_config_value(self, mod, stub_config):
-        stub_config.extend({'recruiter': u'CLIRecruiter'})
+    def test_recruiter_config_value_used_if_not_debug(self, mod, stub_config):
+        stub_config.extend({'mode': u'sandbox', 'recruiter': u'CLIRecruiter'})
         r = mod.from_config(stub_config)
         assert isinstance(r, mod.CLIRecruiter)
+
+    def test_debug_mode_trumps_recruiter_config_value(self, mod, stub_config):
+        stub_config.extend({'recruiter': u'CLIRecruiter'})
+        r = mod.from_config(stub_config)
+        assert isinstance(r, mod.HotAirRecruiter)
+
+    def test_bot_recruiter_trumps_debug_mode(self, mod, stub_config):
+        stub_config.extend({'recruiter': u'bots'})
+        r = mod.from_config(stub_config)
+        assert isinstance(r, mod.BotRecruiter)
 
     def test_default_is_mturk_recruiter_if_not_debug(self, mod, active_config):
         active_config.extend({'mode': u'sandbox'})
@@ -44,7 +54,7 @@ class TestModuleFunctions(object):
         assert isinstance(r, mod.MTurkRecruiter)
 
     def test_unknown_recruiter_name_raises(self, mod, stub_config):
-        stub_config.extend({'recruiter': u'bogus'})
+        stub_config.extend({'mode': u'sandbox', 'recruiter': u'bogus'})
         with pytest.raises(NotImplementedError):
             mod.from_config(stub_config)
 

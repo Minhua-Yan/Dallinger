@@ -263,10 +263,8 @@ class TestMTurkRecruiter(object):
             mockservice = mock.create_autospec(MTurkService)
             r = MTurkRecruiter()
             r.mturkservice = mockservice('fake key', 'fake secret')
-            r.mturkservice.check_credentials = mock.Mock(return_value=True)
-            r.mturkservice.create_hit = mock.Mock(return_value={
-                'type_id': 'fake type id'
-            })
+            r.mturkservice.check_credentials.return_value = True
+            r.mturkservice.create_hit.return_value = {'type_id': 'fake type id'}
             r.config.set('mode', u'sandbox')
             return r
 
@@ -482,24 +480,25 @@ class TestMTurkRecruiter(object):
         recruiter.notify_recruited(participant)
 
 
+@pytest.mark.usefixtures('active_config')
 class TestMTurkLargeRecruiter(object):
 
     @pytest.fixture
-    def recruiter(self, stub_config):
+    def recruiter(self):
         from dallinger.mturk import MTurkService
         from dallinger.recruiters import MTurkLargeRecruiter
-        mockservice = mock.create_autospec(MTurkService)
-        r = MTurkLargeRecruiter(
-            config=stub_config,
-            hit_domain='fake-domain',
-            ad_url='http://fake-domain/ad'
-        )
-        r.mturkservice = mockservice('fake key', 'fake secret')
-        r.mturkservice.check_credentials.return_value = True
-        r.mturkservice.create_hit.return_value = {
-            'type_id': 'fake type id'
-        }
-        return r
+        with mock.patch.multiple('dallinger.recruiters',
+                                 os=mock.DEFAULT,
+                                 get_base_url=mock.DEFAULT) as mocks:
+            mocks['get_base_url'].return_value = 'http://fake-domain'
+            mocks['os'].getenv.return_value = 'fake-host-domain'
+            mockservice = mock.create_autospec(MTurkService)
+            r = MTurkLargeRecruiter()
+            r.mturkservice = mockservice('fake key', 'fake secret')
+            r.mturkservice.check_credentials.return_value = True
+            r.mturkservice.create_hit.return_value = {'type_id': 'fake type id'}
+            r.config.set('mode', u'sandbox')
+            return r
 
     def test_open_recruitment_single_recruitee(self, recruiter):
         recruiter.open_recruitment(n=1)

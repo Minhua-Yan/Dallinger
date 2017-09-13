@@ -449,7 +449,9 @@ def for_experiment(experiment):
 def from_config(config):
     """Return a Recruiter instance based on the configuration.
 
-    Default is HotAirRecruiter in debug mode and MTurkRecruiter in other modes.
+    Default is HotAirRecruiter in debug mode (unless we're using
+    the bot recruiter, which can be used in debug mode)
+    and the MTurkRecruiter in other modes.
     """
     debug_mode = config.get('mode', None) == 'debug'
     name = config.get('recruiter', None)
@@ -458,16 +460,17 @@ def from_config(config):
     if name is not None:
         klass = by_name(name)
 
-    # Special case 1: may run BotRecruiter in debug mode
+    # Special case 1: may run BotRecruiter in any mode (debug or not),
+    # so it trumps everything else:
     if klass is BotRecruiter:
         return klass()
 
     # Special case 2: if we're not using bots and we're in debug mode,
-    # ignore any configured recruiter
+    # ignore any configured recruiter:
     if debug_mode:
         return HotAirRecruiter()
 
-    # Configured recruiter
+    # Configured recruiter:
     if klass is not None:
         return klass()
 
@@ -483,7 +486,8 @@ def by_name(name):
     known nicknames are both supported.
     """
     nicknames = {
-        'bots': BotRecruiter
+        'bots': BotRecruiter,
+        'mturklarge': MTurkLargeRecruiter
     }
     if name in nicknames:
         return nicknames[name]

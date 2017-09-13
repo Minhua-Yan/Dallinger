@@ -522,9 +522,10 @@ def deploy_sandbox_shared_setup(verbose=True, app=None, exp_config=None):
         'app_home': heroku_app.url,
         'recruitment_msg': launch_data.get('recruitment_msg', None),
     }
-    log("URLs:")
+    log("Experiment details:")
     log("App home: {}".format(result['app_home']), chevrons=False)
-    log("Recruiter info:\n{}".format(result['recruitment_msg']), chevrons=False)
+    log("Recruiter info:")
+    log(result['recruitment_msg'], chevrons=False)
 
     # Return to the branch whence we came.
     os.chdir(cwd)

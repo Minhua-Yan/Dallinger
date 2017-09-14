@@ -156,7 +156,6 @@ class TestQuestion(object):
         assert models.Question.query.all()
 
     def test_nonworking_mturk_participants_accepted_if_debug(self, a, webapp, active_config):
-        active_config.extend({'recruiter': u'mturk'})
         participant = a.participant()
         participant.status = 'submitted'
         webapp.post(
@@ -165,7 +164,7 @@ class TestQuestion(object):
         assert models.Question.query.all()
 
     def test_nonworking_mturk_participants_denied_if_not_debug(self, a, webapp, active_config):
-        active_config.extend({'mode': u'sandbox', 'recruiter': u'mturk'})
+        active_config.extend({'mode': u'sandbox'})
         participant = a.participant()
         participant.status = 'submitted'
         webapp.post(

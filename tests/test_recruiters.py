@@ -89,6 +89,10 @@ class TestRecruiter(object):
     def test_external_submission_url(self, recruiter):
         assert recruiter.external_submission_url is None
 
+    def test_rejects_questionnaire_from_returns_none(self, recruiter):
+        dummy = mock.NonCallableMock()
+        assert recruiter.rejects_questionnaire_from(participant=dummy) is None
+
 
 @pytest.mark.usefixtures('active_config')
 class TestCLIRecruiter(object):
@@ -478,6 +482,15 @@ class TestMTurkRecruiter(object):
 
         # logs, but does not raise:
         recruiter.notify_recruited(participant)
+
+    def test_rejects_questionnaire_from_returns_none_if_working(self, recruiter):
+        participant = mock.Mock(spec=Participant, status="working")
+        assert recruiter.rejects_questionnaire_from(participant) is None
+
+    def test_rejects_questionnaire_from_returns_error_if_already_submitted(self, recruiter):
+        participant = mock.Mock(spec=Participant, status="submitted")
+        rejection = recruiter.rejects_questionnaire_from(participant)
+        assert "already sumbitted their HIT" in rejection
 
 
 @pytest.mark.usefixtures('active_config')

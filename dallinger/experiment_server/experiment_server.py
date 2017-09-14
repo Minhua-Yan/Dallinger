@@ -674,14 +674,13 @@ def create_question(participant_id):
         if isinstance(x, Response):
             return x
 
-    # Make sure the participant status is "working" if we're using the
-    # MTurkRecruiter (unless we're in debug mode)
-    recruiter = config.get('recruiter', 'mturk')
-    mode = config.get('mode')
-    # XXX Should be a method/property on the Recruiter
-    if recruiter == 'mturk' and mode != 'debug' and ppt.status != "working":
+    # Consult the recruiter regarding whether to accept a questionnaire
+    # from the participant:
+    rejection = recruiters.from_config(config).rejects_questionnaire_from(ppt)
+    if rejection:
         return error_response(
-            error_type="/question POST, status = {}".format(ppt.status),
+            error_type="/question POST, status = {}, reason: {}".format(
+                ppt.status, rejection),
             participant=ppt
         )
 

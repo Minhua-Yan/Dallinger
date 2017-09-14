@@ -69,6 +69,16 @@ class Recruiter(object):
         """
         pass
 
+    def rejects_questionnaire_from(self, participant):
+        """Recruiters have different circumstances under which experiment
+        questionnaires should be accepted or rejected.
+
+        To reject a questionnaire, this method returns an error string.
+
+        By default, they are accepted, so we return None.
+        """
+        return None
+
 
 class CLIRecruiter(Recruiter):
     """A recruiter which prints out /ad URLs to the console for direct
@@ -298,6 +308,20 @@ class MTurkRecruiter(Recruiter):
                 )
             except QualificationNotFoundException, ex:
                 logger.exception(ex)
+
+    def rejects_questionnaire_from(self, participant):
+        """Mechanical Turk participants submit their HITs on the MTurk site
+        (see external_submission_url), and MTurk then sends a notification
+        to Dallinger which is used to mark the assignment completed.
+
+        If a HIT has already been submitted, it's too late to submit the
+        questionnaire.
+        """
+        if participant.status != "working":
+            return (
+                "This participant has already sumbitted their HIT "
+                "on MTurk and can no longer submit the questionnaire"
+            )
 
     def reward_bonus(self, assignment_id, amount, reason):
         """Reward the Turker for a specified assignment with a bonus."""

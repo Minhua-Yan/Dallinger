@@ -95,12 +95,13 @@ class CLIRecruiter(Recruiter):
         """
         logger.info("Opening recruitment.")
         recruitments = self.recruit(n)
-        message = ''.join((
-            'Search for "{}" '.format(NEW_RECRUIT_LOG_PREFIX),
-            'in the logs for subsequent recruitment URLs.\n',
-            'Open the logs for this experiment with ',
-            '"dallinger logs --app {}"'.format(self.config.get('id')),
-        ))
+        message = (
+            'Search for "{}" in the logs for subsequent recruitment URLs.\n'
+            'Open the logs for this experiment with '
+            '"dallinger logs --app {}"'.format(
+                NEW_RECRUIT_LOG_PREFIX, self.config.get('id')
+            )
+        )
         return {
             'items': recruitments,
             'message': message
@@ -213,7 +214,7 @@ class MTurkRecruiter(Recruiter):
         self.mturkservice = MTurkService(
             self.config.get('aws_access_key_id'),
             self.config.get('aws_secret_access_key'),
-            (self.config.get('mode') == "sandbox")
+            self.config.get('mode') != u"live"
         )
 
     @property
@@ -517,6 +518,6 @@ def by_name(name):
         return nicknames[name]
 
     this_module = sys.modules[__name__]
-    thing = getattr(this_module, name, None)
-    if thing is not None and issubclass(thing, Recruiter):
-        return thing
+    klass = getattr(this_module, name, None)
+    if klass is not None and issubclass(klass, Recruiter):
+        return klass

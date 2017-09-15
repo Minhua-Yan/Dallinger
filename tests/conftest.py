@@ -2,8 +2,10 @@ import os
 import pytest
 import shutil
 import tempfile
+from dallinger import information
 from dallinger import models
 from dallinger import networks
+from dallinger import nodes
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -119,6 +121,13 @@ def a(db_session):
         def __init__(self, db):
             self.db = db
 
+        def agent(self, **kw):
+            defaults = {
+                'network': self.network
+            }
+            defaults.update(kw)
+            return self._build(nodes.Agent, defaults)
+
         def info(self, **kw):
             defaults = {
                 'origin': self.star_network,
@@ -127,6 +136,16 @@ def a(db_session):
 
             defaults.update(kw)
             return self._build(models.Info, defaults)
+
+        def gene(self, **kw):
+            defaults = {}
+            defaults.update(kw)
+            return self._build(information.Gene, defaults)
+
+        def meme(self, **kw):
+            defaults = {}
+            defaults.update(kw)
+            return self._build(information.Meme, defaults)
 
         def participant(self, **kw):
             defaults = {
@@ -142,6 +161,13 @@ def a(db_session):
             defaults = {}
             defaults.update(kw)
             return self._build(models.Network, defaults)
+
+        def replicator(self, **kw):
+            defaults = {
+                'network': self.network
+            }
+            defaults.update(kw)
+            return self._build(nodes.ReplicatorAgent, defaults)
 
         def star_network(self, **kw):
             defaults = {

@@ -518,6 +518,41 @@ class TestNodeRouteGET(object):
 
 
 @pytest.mark.usefixtures('experiment_dir', 'db_session')
+class TestParticipantNodeCreationRoute(object):
+
+    def test_with_invalid_participant_id_returns_error(self, webapp):
+        resp = webapp.post('/node/123')
+        assert resp.status_code == 403
+        assert '/node POST no participant found' in resp.data
+
+    def test_with_valid_participant_creates_participant_node(self, a, webapp):
+        participant_id = a.participant().id
+        resp = webapp.post('/node/{}'.format(participant_id))
+        data = json.loads(resp.data)
+        assert data.get('node').get('participant_id') == participant_id
+
+    def test_with_valid_participant_adds_node_to_network(self, a, webapp):
+        from dallinger.networks import Star
+        participant_id = a.participant().id
+        resp = webapp.post('/node/{}'.format(participant_id))
+        data = json.loads(resp.data)
+        assert Star.query.one().nodes()[0].id == data['node']['network_id']
+
+    def test_participant_status_not_working_returns_error(self, a, webapp):
+        participant = a.participant()
+        participant.status = 'submitted'
+        resp = webapp.post('/node/{}'.format(participant.id))
+        assert 'Error type: /node POST, status = submitted' in resp.data
+
+    def test_no_network_for_participant_returns_error(self, a, webapp):
+        participant = a.participant()
+        # Assign the participant to a node and fill the network:
+        a.node(participant=participant, network=a.star_network(max_size=1))
+        resp = webapp.post('/node/{}'.format(participant.id))
+        assert resp.data == '{"status": "error"}'
+
+
+@pytest.mark.usefixtures('experiment_dir', 'db_session')
 class TestNodeRoutePOST(object):
 
     def test_node_transmit_info_creates_transmission(self, a, webapp, db_session):

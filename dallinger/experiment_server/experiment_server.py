@@ -765,8 +765,7 @@ def create_node(participant_id):
 
     # Get the participant.
     try:
-        participant = models.Participant.\
-            query.filter_by(id=participant_id).one()
+        participant = models.Participant.query.filter_by(id=participant_id).one()
     except NoResultFound:
         return error_response(error_type="/node POST no participant found",
                               status=403)
@@ -779,19 +778,12 @@ def create_node(participant_id):
 
     # execute the request
     network = exp.get_network_for_participant(participant=participant)
-
     if network is None:
         return Response(dumps({"status": "error"}), status=403)
 
-    node = exp.create_node(
-        participant=participant,
-        network=network)
-
+    node = exp.create_node(participant=participant, network=network)
     assign_properties(node)
-
-    exp.add_node_to_network(
-        node=node,
-        network=network)
+    exp.add_node_to_network(node=node, network=network)
 
     # ping the experiment
     exp.node_post_request(participant=participant, node=node)
